@@ -1,6 +1,6 @@
 package org.servalproject.succinct.simulator;
 
-public class Packetizer {
+public class PacketSplitter {
     public byte[][] split(byte[] data, int fragmentSize) {
         int numFragments = (int)Math.ceil((double)data.length / fragmentSize);
 
@@ -22,7 +22,7 @@ public class Packetizer {
         return fragments;
     }
 
-    public Packet[] packetize(byte[] data, int packetSize) {
+    public Packet[] packetize(byte[] data, int packetSize, int sequenceNumberOffset) {
         int numPackets = (int)Math.ceil((double)data.length / packetSize);
 
         Packet[] packets = new Packet[numPackets];
@@ -30,7 +30,8 @@ public class Packetizer {
         byte[][] textFragments = split(data, packetSize);
 
         for (int i = 0; i < numPackets; i++) {
-            packets[i] = new Packet(packetSize, textFragments[i]);
+            packets[i] = new Packet(Packet.PacketType.DATA, sequenceNumberOffset, textFragments[i]);
+            sequenceNumberOffset++;
         }
 
         return packets;
