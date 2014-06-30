@@ -1,4 +1,4 @@
-package org.servalproject.succinct.simulator;
+package org.servalproject.succinct.interSimulator;
 
 public class PacketSplitter {
     public byte[][] split(byte[] data, int fragmentSize) {

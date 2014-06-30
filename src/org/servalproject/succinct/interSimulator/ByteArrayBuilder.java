@@ -1,4 +1,4 @@
-package org.servalproject.succinct.simulator;
+package org.servalproject.succinct.interSimulator;
 
 import java.util.LinkedList;
 import java.util.List;
