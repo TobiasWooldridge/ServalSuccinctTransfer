@@ -22,7 +22,6 @@ public class ConversationTest {
 
         packets = Arrays.asList(packetMagic.packetize(message, 10, 0));
 
-
         to = new PacketEndPoint("Destination");
         from = new PacketEndPoint("Origin");
     }
@@ -38,7 +37,6 @@ public class ConversationTest {
         org.junit.Assert.assertArrayEquals(message, to.getReceivedStream().toByteArray());
     }
 
-
     @Test
     public void shuffledConversationWithPacketObjects() {
         from.connectTo(to);
@@ -50,5 +48,6 @@ public class ConversationTest {
 
         org.junit.Assert.assertArrayEquals(message, to.getReceivedStream().toByteArray());
     }
+
 }
 
