@@ -21,6 +21,10 @@ public class ServalMesh {
             nodes.add(node);
         }
 
+        // Stimulate 'onNewMeshNodes' event on all mesh nodes
+        for (ServalNode n : nodes) {
+            n.onNewMeshNodes();
+        }
     }
 
     public void removeNode(ServalNode node) {
@@ -33,5 +37,11 @@ public class ServalMesh {
 
     public boolean singular() {
         return nodes.size() == 1;
+    }
+
+    public void broadcast(Bundle bundle) {
+        for (ServalNode node : nodes) {
+            node.saveBundle(bundle);
+        }
     }
 }

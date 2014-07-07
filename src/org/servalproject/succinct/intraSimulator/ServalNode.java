@@ -1,7 +1,5 @@
 package org.servalproject.succinct.intraSimulator;
 
-import org.servalproject.succinct.interSimulator.Packet;
-
 import java.util.*;
 
 public class ServalNode {
@@ -13,6 +11,9 @@ public class ServalNode {
     private ServalMesh mesh;
 
     private Collection<Capability> capabilities = new HashSet<>();
+
+    private Map<Bundle.BundleToken, Bundle> storeAndForwardBuffer = new HashMap<>();
+    private Collection<Bundle.BundleToken> killTokens = new HashSet<>();
 
     public ServalNode() {
         mesh = new ServalMesh(this);
@@ -48,25 +49,26 @@ public class ServalNode {
     }
 
 
-    public void transmitPacket(Packet packet) {
+    public void sendBundleOverUplink(Bundle bundle) {
         if (capabilities.isEmpty()) {
             throw new IllegalStateException("This serval node cannot transmit a packet as it lacks any uplink capabilities");
         }
 
-        System.out.println("Transmitting packet #" + packet.getSeqNum());
+        System.out.println("Transmitting packet #" + bundle.getId());
     }
 
-    public void storeAndForwardPacket(Packet packet) {
-
-    }
-
-    public void broadcastPacket(Packet packet) {
-        if (!capabilities.isEmpty()) {
-            // Okay, we send it ourselves
-            transmitPacket(packet);
+    void saveBundle(Bundle bundle) {
+        if (bundle.getBundleType() == Bundle.BundleType.KILL || !storeAndForwardBuffer.containsKey(bundle.getToken())) {
+            storeAndForwardBuffer.put(bundle.getToken(), bundle);
         }
-        else if (mesh.singular()) {
-            storeAndForwardPacket(packet);
+    }   
+
+    public void sendBundle(Bundle bundle) {
+        ServalNode uplinkNode = null;
+
+        if (!capabilities.isEmpty()) {
+            // Elect ourselves to send it
+            uplinkNode = this;
         }
         else {
             // Check if anybody in the mesh (i.e. neighbours) have the capability to transmit it
@@ -80,19 +82,23 @@ public class ServalNode {
             // Sunshine scenario: a neighbour can upload the packet immediately
             if (!capableNeighbours.isEmpty()) {
                 // Choose a random neighbour
-                ServalNode transmitNode = capableNeighbours.get(new Random().nextInt(capableNeighbours.size()));
-
-                // Transmit it via that neighbour
-                transmitNode.transmitPacket(packet);
+                uplinkNode = capableNeighbours.get(new Random().nextInt(capableNeighbours.size()));
             }
+        }
 
-            // Otherwise, everybody can store and forward it
-            else {
-                for (ServalNode neighbour : mesh.getNodes()) {
-                    neighbour.storeAndForwardPacket(packet);
-                }
-            }
+        // Upload the packet immediately
+        if (uplinkNode != null) {
+            sendBundleOverUplink(bundle);
+        }
+        // Otherwise try store-and-forwarding it to an uplink
+        else {
+            mesh.broadcast(bundle);
+        }
+    }
 
+    public void onNewMeshNodes() {
+        for (Bundle bundle : storeAndForwardBuffer.values()) {
+            sendBundle(bundle);
         }
     }
 }
